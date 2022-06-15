@@ -62,12 +62,14 @@ function EditComponent(props) {
 
   const { data, loading } = useFetchData();
 
-  const allProfs = useSelect((select) => {
-    return select("core").getEntityRecords("postType", "post", {
-      per_page: -1,
-    });
+  const allPosts = useSelect((select) => {
+    return select("core").getEntityRecords("postType", "post");
   });
+  let getMediaData = (mediaUrl) => {
+    return wp.data.select("core").getMedia(mediaUrl);
+  };
 
+  if (allPosts == undefined) return <p>Loading...</p>;
   return (
     <div className="featured-professor-wrapper">
       <div>
@@ -128,19 +130,38 @@ function EditComponent(props) {
         }}
       >
         <div>
-          {loading && <div>Loading</div>}
-          {!loading && (
-            <div>
-              <h2>Doing stuff with data</h2>
-              {}
-              {data.map((item) => (
-                <span>{item.name}</span>
-              ))}
-            </div>
-          )}
+          {allPosts &&
+            allPosts.map((post, i) => {
+              const featuredImage = post.featured_media
+                ? wp.data.select("core").getMedia(post.featured_media)
+                : null;
+
+              return (
+                <div>
+                  {post.title.rendered}
+                  {console.log(featuredImage)}
+                  {featuredImage && (
+                    <img
+                      src={
+                        featuredImage.media_details.sizes.thumbnail.source_url
+                      }
+                    />
+                  )}
+                </div>
+              );
+            })}
+          {/* {allPosts.map((prof) => {
+            return (
+           
+              <div key={prof.id} class="post-item-card">
+                {console.log(getMediaData(prof.featured_media))}
+               
+                <h2>{prof.title.rendered}</h2>
+              </div>
+            );
+          })} */}
         </div>
-        {console.log(allProfs, data)}
-        <div>{allProfs}</div>
+        <div>{}</div>
       </div>
     </div>
   );

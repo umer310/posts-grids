@@ -2722,11 +2722,15 @@ function EditComponent(props) {
     data,
     loading
   } = (0,_use_fetch_data_js__WEBPACK_IMPORTED_MODULE_6__["default"])();
-  const allProfs = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useSelect)(select => {
-    return select("core").getEntityRecords("postType", "post", {
-      per_page: -1
-    });
+  const allPosts = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useSelect)(select => {
+    return select("core").getEntityRecords("postType", "post");
   });
+
+  let getMediaData = mediaUrl => {
+    return wp.data.select("core").getMedia(mediaUrl);
+  };
+
+  if (allPosts == undefined) return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading...");
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "featured-professor-wrapper"
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
@@ -2778,7 +2782,12 @@ function EditComponent(props) {
     style: {
       backgroundColor: attributes.favoriteColor
     }
-  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, loading && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, "Loading"), !loading && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, "Doing stuff with data"), data.map(item => (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("span", null, item.name)))), console.log(allProfs, data), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, allProfs)));
+  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, allPosts && allPosts.map((post, i) => {
+    const featuredImage = post.featured_media ? wp.data.select("core").getMedia(post.featured_media) : null;
+    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, post.title.rendered, console.log(featuredImage), featuredImage && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+      src: featuredImage.media_details.sizes.thumbnail.source_url
+    }));
+  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null)));
 }
 })();
 
