@@ -2684,11 +2684,6 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
     myRichHeading: {
       type: "string"
     },
-    myRichText: {
-      type: "string",
-      source: "html",
-      selector: "p"
-    },
     toggle: {
       type: "boolean",
       default: true
@@ -2704,6 +2699,14 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
     activateLasers: {
       type: "boolean",
       default: false
+    },
+    numberOfPosts: {
+      type: "string",
+      default: 6
+    },
+    selectCategory: {
+      type: "string",
+      default: "Uncategorized"
     }
   },
   category: "common",
@@ -2718,39 +2721,25 @@ function EditComponent(props) {
     attributes,
     setAttributes
   } = props;
-  const {
-    data,
-    loading
-  } = (0,_use_fetch_data_js__WEBPACK_IMPORTED_MODULE_6__["default"])();
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   const allPosts = (0,_wordpress_data__WEBPACK_IMPORTED_MODULE_3__.useSelect)(select => {
     return select("core").getEntityRecords("postType", "post");
   });
-
-  let getMediaData = mediaUrl => {
-    return wp.data.select("core").getMedia(mediaUrl);
-  };
-
+  const getCategoriesByPost = wp.data.select("core").getEntityRecords("taxonomy", "category");
   if (allPosts == undefined) return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading...");
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "featured-professor-wrapper"
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.InspectorControls, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
     title: "Most awesome settings ever",
-    initialOpen: true
+    initialOpen: false
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelRow, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.ToggleControl, {
     label: "Do You Want Search Bar Enabled",
     checked: attributes.toggle,
     onChange: newval => setAttributes({
       toggle: newval
     })
-  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelRow, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_block_editor__WEBPACK_IMPORTED_MODULE_1__.RichText, {
-    tagName: "h2",
-    placeholder: "Post Type Name",
-    value: attributes.myRichHeading,
-    onChange: newtext => setAttributes({
-      myRichHeading: newtext
-    })
   })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelRow, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.SelectControl, {
-    label: "What's your favorite animal?",
+    label: "Select your categories",
     value: attributes.favoriteAnimal,
     options: [{
       label: "Dogs",
@@ -2777,16 +2766,55 @@ function EditComponent(props) {
     onChange: newval => setAttributes({
       activateLasers: newval
     })
+  }))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelBody, {
+    title: "Post setting",
+    initialOpen: false
+  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelRow, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.TextControl, {
+    label: "  Enter number of how show",
+    type: "number",
+    value: attributes.numberOfPosts,
+    onChange: value => setAttributes({
+      activateLasers: value
+    })
+  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.PanelRow, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_components__WEBPACK_IMPORTED_MODULE_2__.SelectControl, {
+    label: "Select your categories",
+    value: attributes.selectCategory,
+    options: getCategoriesByPost && getCategoriesByPost.map(postc => {
+      return {
+        label: postc.name,
+        value: postc.id
+      };
+    }),
+    onChange: newval => setAttributes({
+      selectCategory: newval
+    })
   }))))), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
     className: "professor-select-container",
     style: {
       backgroundColor: attributes.favoriteColor
     }
   }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, allPosts && allPosts.map((post, i) => {
+    const a = 0;
     const featuredImage = post.featured_media ? wp.data.select("core").getMedia(post.featured_media) : null;
-    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, post.title.rendered, console.log(featuredImage), featuredImage && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+    const getUser = post.author ? wp.data.select("core").getEntityRecords("root", "user", {
+      include: post.author
+    }) : null;
+    const getCategoriesByPosts = wp.data.select("core").getEntityRecords("taxonomy", "category", {
+      include: post.categories
+    });
+    const date = new Date(post.date.split("T")[0]);
+    const day = String(date.getDate()).padStart(2, "0");
+    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      key: post.id
+    }, featuredImage && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
       src: featuredImage.media_details.sizes.thumbnail.source_url
-    }));
+    }), getCategoriesByPosts && getCategoriesByPosts.map(postscat => {
+      return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+        href: postscat.link
+      }, postscat.name, " ");
+    }), getUser && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+      href: getUser[a].link
+    }, getUser[a].username), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h4", null, post.title.rendered), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null, day, "-", monthNames[date.getMonth()], "-", date.getFullYear()), post.excerpt.rendered.replace(/(<([^>]+)>)/gi, "").slice(0, 100).concat("..."));
   })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", null)));
 }
 })();

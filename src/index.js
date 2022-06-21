@@ -1,7 +1,6 @@
 import {
   InspectorControls,
   AlignmentToolbar,
-  TextControl,
   RichText,
 } from "@wordpress/block-editor";
 import {
@@ -11,6 +10,9 @@ import {
   CheckboxControl,
   SelectControl,
   ColorPicker,
+  Text,
+  Grid,
+  TextControl,
 } from "@wordpress/components";
 import { useSelect } from "@wordpress/data";
 import { useState, useEffect } from "react";
@@ -26,11 +28,6 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
   attributes: {
     myRichHeading: {
       type: "string",
-    },
-    myRichText: {
-      type: "string",
-      source: "html",
-      selector: "p",
     },
     toggle: {
       type: "boolean",
@@ -48,6 +45,14 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
       type: "boolean",
       default: false,
     },
+    numberOfPosts: {
+      type: "string",
+      default: 6,
+    },
+    selectCategory: {
+      type: "string",
+      default: "Uncategorized",
+    },
   },
 
   category: "common",
@@ -60,21 +65,33 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
 function EditComponent(props) {
   const { attributes, setAttributes } = props;
 
-  const { data, loading } = useFetchData();
-
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
   const allPosts = useSelect((select) => {
     return select("core").getEntityRecords("postType", "post");
   });
-  let getMediaData = (mediaUrl) => {
-    return wp.data.select("core").getMedia(mediaUrl);
-  };
 
+  const getCategoriesByPost = wp.data
+    .select("core")
+    .getEntityRecords("taxonomy", "category");
   if (allPosts == undefined) return <p>Loading...</p>;
   return (
     <div className="featured-professor-wrapper">
       <div>
         <InspectorControls>
-          <PanelBody title="Most awesome settings ever" initialOpen={true}>
+          <PanelBody title="Most awesome settings ever" initialOpen={false}>
             <PanelRow>
               <ToggleControl
                 label="Do You Want Search Bar Enabled"
@@ -82,19 +99,10 @@ function EditComponent(props) {
                 onChange={(newval) => setAttributes({ toggle: newval })}
               />
             </PanelRow>
-            <PanelRow>
-              <RichText
-                tagName="h2"
-                placeholder="Post Type Name"
-                value={attributes.myRichHeading}
-                onChange={(newtext) =>
-                  setAttributes({ myRichHeading: newtext })
-                }
-              />
-            </PanelRow>
+
             <PanelRow>
               <SelectControl
-                label="What's your favorite animal?"
+                label="Select your categories"
                 value={attributes.favoriteAnimal}
                 options={[
                   { label: "Dogs", value: "dogs" },
@@ -121,6 +129,29 @@ function EditComponent(props) {
               />
             </PanelRow>
           </PanelBody>
+          <PanelBody title="Post setting" initialOpen={false}>
+            <PanelRow>
+              <TextControl
+                label="  Enter number of how show"
+                type="number"
+                value={attributes.numberOfPosts}
+                onChange={(value) => setAttributes({ activateLasers: value })}
+              />
+            </PanelRow>
+            <PanelRow>
+              <SelectControl
+                label="Select your categories"
+                value={attributes.selectCategory}
+                options={
+                  getCategoriesByPost &&
+                  getCategoriesByPost.map((postc) => {
+                    return { label: postc.name, value: postc.id };
+                  })
+                }
+                onChange={(newval) => setAttributes({ selectCategory: newval })}
+              />
+            </PanelRow>
+          </PanelBody>
         </InspectorControls>
       </div>
       <div
@@ -132,14 +163,25 @@ function EditComponent(props) {
         <div>
           {allPosts &&
             allPosts.map((post, i) => {
+              const a = 0;
               const featuredImage = post.featured_media
                 ? wp.data.select("core").getMedia(post.featured_media)
                 : null;
+              const getUser = post.author
+                ? wp.data
+                    .select("core")
+                    .getEntityRecords("root", "user", { include: post.author })
+                : null;
+              const getCategoriesByPosts = wp.data
+                .select("core")
+                .getEntityRecords("taxonomy", "category", {
+                  include: post.categories,
+                });
+              const date = new Date(post.date.split("T")[0]);
+              const day = String(date.getDate()).padStart(2, "0");
 
               return (
-                <div>
-                  {post.title.rendered}
-                  {console.log(featuredImage)}
+                <div key={post.id}>
                   {featuredImage && (
                     <img
                       src={
@@ -147,19 +189,27 @@ function EditComponent(props) {
                       }
                     />
                   )}
+
+                  {getCategoriesByPosts &&
+                    getCategoriesByPosts.map((postscat) => {
+                      return <a href={postscat.link}>{postscat.name} </a>;
+                    })}
+                  {getUser && (
+                    <a href={getUser[a].link}>{getUser[a].username}</a>
+                  )}
+
+                  <h4>{post.title.rendered}</h4>
+
+                  <div>
+                    {day}-{monthNames[date.getMonth()]}-{date.getFullYear()}
+                  </div>
+                  {post.excerpt.rendered
+                    .replace(/(<([^>]+)>)/gi, "")
+                    .slice(0, 100)
+                    .concat("...")}
                 </div>
               );
             })}
-          {/* {allPosts.map((prof) => {
-            return (
-           
-              <div key={prof.id} class="post-item-card">
-                {console.log(getMediaData(prof.featured_media))}
-               
-                <h2>{prof.title.rendered}</h2>
-              </div>
-            );
-          })} */}
         </div>
         <div>{}</div>
       </div>
