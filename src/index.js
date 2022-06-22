@@ -2,8 +2,10 @@ import {
   InspectorControls,
   AlignmentToolbar,
   RichText,
+  BlockControls,
 } from "@wordpress/block-editor";
 import {
+  TextControl,
   ToggleControl,
   PanelBody,
   PanelRow,
@@ -12,7 +14,6 @@ import {
   ColorPicker,
   Text,
   Grid,
-  TextControl,
 } from "@wordpress/components";
 import { useSelect } from "@wordpress/data";
 import { useState, useEffect } from "react";
@@ -80,15 +81,23 @@ function EditComponent(props) {
     "December",
   ];
   const allPosts = useSelect((select) => {
-    return select("core").getEntityRecords("postType", "post");
+    return select("core").getEntityRecords("postType", "post", {
+      per_page: props.attributes.numberOfPosts,
+      categories: props.attributes.selectCategory,
+      order: "asc",
+    });
   });
+  function updateQuestionValue(value) {
+    setAttributes({ numberOfPosts: value });
+  }
 
   const getCategoriesByPost = wp.data
     .select("core")
     .getEntityRecords("taxonomy", "category");
   if (allPosts == undefined) return <p>Loading...</p>;
   return (
-    <div className="featured-professor-wrapper">
+    <div className={"featured-professor-wrapper "}>
+      {console.log(props)}
       <div>
         <InspectorControls>
           <PanelBody title="Most awesome settings ever" initialOpen={false}>
@@ -134,9 +143,10 @@ function EditComponent(props) {
               <TextControl
                 label="  Enter number of how show"
                 type="number"
+                onChange={updateQuestionValue}
                 value={attributes.numberOfPosts}
-                onChange={(value) => setAttributes({ activateLasers: value })}
               />
+              {console.log(attributes.numberOfPosts)}
             </PanelRow>
             <PanelRow>
               <SelectControl
@@ -155,64 +165,58 @@ function EditComponent(props) {
         </InspectorControls>
       </div>
       <div
-        className="professor-select-container"
+        className={"posts-grids-container layout " + props.className}
         style={{
           backgroundColor: attributes.favoriteColor,
         }}
       >
-        <div>
-          {allPosts &&
-            allPosts.map((post, i) => {
-              const a = 0;
-              const featuredImage = post.featured_media
-                ? wp.data.select("core").getMedia(post.featured_media)
-                : null;
-              const getUser = post.author
-                ? wp.data
-                    .select("core")
-                    .getEntityRecords("root", "user", { include: post.author })
-                : null;
-              const getCategoriesByPosts = wp.data
-                .select("core")
-                .getEntityRecords("taxonomy", "category", {
-                  include: post.categories,
-                });
-              const date = new Date(post.date.split("T")[0]);
-              const day = String(date.getDate()).padStart(2, "0");
+        {allPosts &&
+          allPosts.map((post, i) => {
+            const a = 0;
+            const featuredImage = post.featured_media
+              ? wp.data.select("core").getMedia(post.featured_media)
+              : null;
+            const getUser = post.author
+              ? wp.data
+                  .select("core")
+                  .getEntityRecords("root", "user", { include: post.author })
+              : null;
+            const getCategoriesByPosts = wp.data
+              .select("core")
+              .getEntityRecords("taxonomy", "category", {
+                include: post.categories,
+              });
+            const date = new Date(post.date.split("T")[0]);
+            const day = String(date.getDate()).padStart(2, "0");
 
-              return (
-                <div key={post.id}>
-                  {featuredImage && (
-                    <img
-                      src={
-                        featuredImage.media_details.sizes.thumbnail.source_url
-                      }
-                    />
-                  )}
+            return (
+              <div key={post.id} className="cell">
+                {featuredImage && (
+                  <img
+                    src={featuredImage.media_details.sizes.thumbnail.source_url}
+                  />
+                )}
 
-                  {getCategoriesByPosts &&
-                    getCategoriesByPosts.map((postscat) => {
-                      return <a href={postscat.link}>{postscat.name} </a>;
-                    })}
-                  {getUser && (
-                    <a href={getUser[a].link}>{getUser[a].username}</a>
-                  )}
+                {getCategoriesByPosts &&
+                  getCategoriesByPosts.map((postscat) => {
+                    return <a href={postscat.link}>{postscat.name} </a>;
+                  })}
+                {getUser && <a href={getUser[a].link}>{getUser[a].username}</a>}
 
-                  <h4>{post.title.rendered}</h4>
+                <h4>{post.title.rendered}</h4>
 
-                  <div>
-                    {day}-{monthNames[date.getMonth()]}-{date.getFullYear()}
-                  </div>
-                  {post.excerpt.rendered
-                    .replace(/(<([^>]+)>)/gi, "")
-                    .slice(0, 100)
-                    .concat("...")}
+                <div>
+                  {day}-{monthNames[date.getMonth()]}-{date.getFullYear()}
                 </div>
-              );
-            })}
-        </div>
-        <div>{}</div>
+                {post.excerpt.rendered
+                  .replace(/(<([^>]+)>)/gi, "")
+                  .slice(0, 100)
+                  .concat("...")}
+              </div>
+            );
+          })}
       </div>
+      <div>{}</div>
     </div>
   );
 }
