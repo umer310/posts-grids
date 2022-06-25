@@ -30,7 +30,7 @@ function Quiz(props) {
 
     fetchData();
   }, []);
-  onChangeHandler = async (e) => {
+  onChangeHandler = (e) => {
     this.search(e.target.value);
     this.setState({ value: e.target.value });
   };
