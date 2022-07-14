@@ -27,3 +27,16 @@ const useFetchData = () => {
 };
 
 export default useFetchData;
+// useEffect(() => {
+//   const fetchImages = async () => {
+//     try {
+//       const { image: res } = await axios.get(`/wp-json/wp/v2`);
+
+//       setImage(res);
+//     } catch (error) {
+//       console.error(error);
+//     }
+//     setimagLoading(false);
+//   };
+//   fetchImages();
+// }, []);

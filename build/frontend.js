@@ -2584,6 +2584,9 @@ var __webpack_exports__ = {};
   !*** ./src/frontend.js ***!
   \*************************/
 __webpack_require__.r(__webpack_exports__);
+/* harmony export */ __webpack_require__.d(__webpack_exports__, {
+/* harmony export */   "default": () => (__WEBPACK_DEFAULT_EXPORT__)
+/* harmony export */ });
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(/*! @wordpress/element */ "@wordpress/element");
 /* harmony import */ var _wordpress_element__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__);
 /* harmony import */ var react__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(/*! react */ "react");
@@ -2605,16 +2608,86 @@ divsToUpdate.forEach(function (div) {
   div.classList.remove("paying-attention-update-me");
 });
 
-function Quiz(props) {
+function Quiz(_ref) {
+  let {
+    paddingForMainBox,
+    favoriteColor,
+    borderMainBox,
+    fontSizeM,
+    fontColorForMain,
+    paddingForContentBox,
+    className,
+    selectCategory,
+    numberOfPosts,
+    toggle
+  } = _ref;
+  console.log(paddingForMainBox, favoriteColor, borderMainBox, fontSizeM, fontColorForMain, paddingForContentBox, className, selectCategory, numberOfPosts, toggle);
   const [data, setData] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({});
   const [loading, setLoading] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(true);
+  const [value, setValue] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)(null);
+  const [image, setImage] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({});
+  const [autor, setAutor] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)("");
+  const [categories, setCategories] = (0,react__WEBPACK_IMPORTED_MODULE_1__.useState)({});
+  const mainStyle = {
+    paddingTop: paddingForMainBox == undefined ? "10px" : paddingForMainBox.top,
+    paddingRight: paddingForMainBox == undefined ? "10px" : paddingForMainBox.right,
+    paddingBottom: paddingForMainBox == undefined ? "10px" : paddingForMainBox.bottom,
+    paddingLeft: paddingForMainBox == undefined ? "10px" : paddingForMainBox.left,
+    backgroundColor: favoriteColor == undefined ? "#DDDDDD" : favoriteColor,
+    borderColor: borderMainBox == undefined ? "#72aee6" : borderMainBox.color,
+    borderStyle: borderMainBox == undefined ? "solid" : borderMainBox.style,
+    borderWidth: borderMainBox == undefined ? "1px" : borderMainBox.width,
+    fontSize: fontSizeM == undefined ? "16px" : fontSizeM,
+    color: fontColorForMain == undefined ? "#232323" : fontColorForMain
+  };
+  const contentStyle = {
+    paddingTop: paddingForContentBox == undefined ? "10px" : paddingForContentBox.top,
+    paddingRight: paddingForContentBox == undefined ? "10px" : paddingForContentBox.right,
+    paddingBottom: paddingForContentBox == undefined ? "10px" : paddingForContentBox.bottom,
+    paddingLeft: paddingForContentBox == undefined ? "10px" : paddingForContentBox.left
+  }; // console.log(props);
+
+  let newStories = [];
+  let categoriesArray = [];
+  const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
   (0,react__WEBPACK_IMPORTED_MODULE_1__.useEffect)(() => {
     const fetchData = async () => {
       try {
         const {
           data: response
-        } = await axios__WEBPACK_IMPORTED_MODULE_2___default().get(`/wp-json/wp/v2/posts?filter[category_name]=${props.selectCategory}&per_page=${props.numberOfPosts}&order=asc `);
+        } = await axios__WEBPACK_IMPORTED_MODULE_2___default().get(toggle == false ? `/wp-json/wp/v2/posts?filter[category_name]=${selectCategory}&per_page=${numberOfPosts == null ? 6 : numberOfPosts}&order=asc` : value == null ? `/wp-json/wp/v2/posts?filter[category_name]=${selectCategory}&per_page=${numberOfPosts == null ? 6 : numberOfPosts}&order=asc` : `/wp-json/wp/v2/posts?filter[category_name]=${selectCategory}&per_page=${numberOfPosts == null ? 6 : numberOfPosts}&order=asc&search=${value == "" ? null : value}`);
         setData(response);
+        response.map((post, i) => {
+          // console.log(post.categories);
+          axios__WEBPACK_IMPORTED_MODULE_2___default().get(`/wp-json/wp/v2/media/${post.featured_media}`).then(res => {
+            newStories.push(res.data);
+            setImage(newStories);
+          }).catch(err => {
+            console.log(err);
+          });
+        });
+        response.map((post, i) => {
+          axios__WEBPACK_IMPORTED_MODULE_2___default().get(`/wp-json/wp/v2/users/${post.author}  `).then(res => {
+            setAutor(res.data);
+          }).catch(err => {
+            console.log(err);
+          });
+        });
+        response.map((post, i) => {
+          // console.log(i);
+          // console.log(post.categories);
+          let onePostCategory = [];
+          post.categories.map((category, a) => {
+            // console.log(category);
+            axios__WEBPACK_IMPORTED_MODULE_2___default().get(`/wp-json/wp/v2/categories/${category}  `).then(res => {
+              onePostCategory.push(res.data);
+              categoriesArray.push(onePostCategory);
+            }).catch(err => {
+              console.log(err);
+            });
+          });
+          setCategories(categoriesArray);
+        });
       } catch (error) {
         console.error(error);
       }
@@ -2623,14 +2696,66 @@ function Quiz(props) {
     };
 
     fetchData();
-  }, []);
-  if (loading) return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, "Loading...");
+  }, [value]);
+
+  const onChangeInputHandlar = async e => {
+    const val = e.target.value;
+    setValue(val);
+  }; // if (loading && image) return <p>Loading...</p>;
+
+
+  if (image && loading) {
+    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)(_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.Fragment, null, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h3", null, "loading"));
+  }
+
   return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
-    className: "paying-attention-frontend"
-  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("p", null, console.log(data, props), " working"), data.map(post => {
-    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", null, post.title.rendered);
-  }));
+    className: "paying-attention-frontend  " + className
+  }, toggle == false ? "" : (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "searchBar"
+  }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("input", {
+    value: value,
+    placeholder: "Type something to search",
+    type: "text",
+    onChange: onChangeInputHandlar
+  })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+    className: "layout"
+  }, image && data.map((post, i) => {
+    const date = new Date(post.date.split("T")[0]);
+    const day = String(date.getDate()).padStart(2, "0");
+    return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "cell  " + post.id,
+      style: mainStyle
+    }, image[i] && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("img", {
+      src: image[i].source_url,
+      alt: image[i].alt_text
+    }), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "post-content",
+      style: contentStyle
+    }, (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "post-mata"
+    }, autor && (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+      className: "post-user",
+      href: autor.url
+    }, autor.name), categories[i] && categories[i].map(postscat => {
+      return (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+        className: "post-category",
+        href: postscat.link
+      }, postscat.name, " ");
+    })), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("h2", {
+      className: "post-title"
+    }, post.title.rendered), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "post-date"
+    }, day, "-", monthNames[date.getMonth()], "-", date.getFullYear()), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("div", {
+      className: "post-expcerpt"
+    }, " ", post.excerpt.rendered.replace(/(<([^>]+)>)/gi, "").slice(0, 100).concat("...")), (0,_wordpress_element__WEBPACK_IMPORTED_MODULE_0__.createElement)("a", {
+      className: "post-btn",
+      href: post.link
+    }, "Read More")));
+  })));
 }
+
+Quiz.defaultProps = {};
+/* harmony default export */ const __WEBPACK_DEFAULT_EXPORT__ = (Quiz);
 })();
 
 /******/ })()

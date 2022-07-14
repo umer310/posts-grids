@@ -14,11 +14,14 @@ import {
   ColorPicker,
   Text,
   Grid,
+  FontSizePicker,
 } from "@wordpress/components";
+import { __experimentalBoxControl as BoxControl } from "@wordpress/components";
+import { __experimentalBorderControl as BorderControl } from "@wordpress/components";
+
 import { useSelect } from "@wordpress/data";
 import { useState, useEffect } from "react";
-import axios from "axios";
-import useFetchData from "./use-fetch-data.js";
+import ComponentsSide from "./backend-components/ComponentsSide";
 
 import "./index.scss";
 
@@ -36,7 +39,11 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
     },
     favoriteAnimal: {
       type: "string",
-      default: "dogs",
+      default: "asc",
+    },
+    orderBy: {
+      type: "string",
+      default: "title",
     },
     favoriteColor: {
       type: "string",
@@ -52,7 +59,31 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
     },
     selectCategory: {
       type: "string",
-      default: "Uncategorized",
+      default: 0,
+    },
+    paddingForMainBox: {
+      type: "object",
+      default: { top: "10px", right: "10px", bottom: "10px", left: "10px" },
+    },
+    paddingForContentBox: {
+      type: "object",
+      default: { top: "10px", right: "10px", bottom: "10px", left: "10px" },
+    },
+    borderMainBox: {
+      type: "object",
+      default: { color: "#72aee6", style: "solid", width: "1px" },
+    },
+    maniFontSizes: {
+      type: "number",
+      default: 12,
+    },
+    fontSizeM: {
+      type: "number",
+      default: 16,
+    },
+    fontColorForMain: {
+      type: "string",
+      default: "#232323",
     },
   },
 
@@ -65,6 +96,13 @@ wp.blocks.registerBlockType("ourplugin/posts-grids", {
 
 function EditComponent(props) {
   const { attributes, setAttributes } = props;
+
+  console.log(attributes);
+
+  const colors = [
+    { name: "Blue 20", color: "#72aee6" },
+    // ...
+  ];
 
   const monthNames = [
     "January",
@@ -80,24 +118,51 @@ function EditComponent(props) {
     "November",
     "December",
   ];
+  let mainStyle = {
+    paddingTop: attributes.paddingForMainBox.top,
+    paddingRight: attributes.paddingForMainBox.right,
+    paddingBottom: attributes.paddingForMainBox.bottom,
+    paddingLeft: attributes.paddingForMainBox.left,
+    backgroundColor: attributes.favoriteColor,
+    borderColor: attributes.borderMainBox.color,
+    borderStyle: attributes.borderMainBox.style,
+    borderWidth: attributes.borderMainBox.width,
+    fontSize: attributes.fontSizeM,
+    color: attributes.fontColorForMain,
+  };
+  let contentStyle = {
+    paddingTop: attributes.paddingForContentBox.top,
+    paddingRight: attributes.paddingForContentBox.right,
+    paddingBottom: attributes.paddingForContentBox.bottom,
+    paddingLeft: attributes.paddingForContentBox.left,
+  };
+
   const allPosts = useSelect((select) => {
     return select("core").getEntityRecords("postType", "post", {
       per_page: props.attributes.numberOfPosts,
       categories: props.attributes.selectCategory,
-      order: "asc",
+      order: `${props.attributes.favoriteAnimal}`,
     });
   });
-  function updateQuestionValue(value) {
-    setAttributes({ numberOfPosts: value });
-  }
 
   const getCategoriesByPost = wp.data
     .select("core")
     .getEntityRecords("taxonomy", "category");
-  if (allPosts == undefined) return <p>Loading...</p>;
+
+  const getAllRegistersPostsNams = wp.data.select("core");
+  //console.log(getAllRegistersPostsNams.getPostType());
+
+  {
+    getCategoriesByPost &&
+      setAttributes({ selectCategory: getCategoriesByPost[0].id });
+  }
+  function updateQuestionValue(value) {
+    setAttributes({ numberOfPosts: value });
+  }
+
+  // if (allPosts == undefined) return <p>Loading...</p>;
   return (
     <div className={"featured-professor-wrapper "}>
-      {console.log(props)}
       <div>
         <InspectorControls>
           <PanelBody title="Most awesome settings ever" initialOpen={false}>
@@ -108,15 +173,56 @@ function EditComponent(props) {
                 onChange={(newval) => setAttributes({ toggle: newval })}
               />
             </PanelRow>
-
+            <PanelRow>
+              <BorderControl
+                colors={colors}
+                value={attributes.borderMainBox}
+                label={"Border"}
+                onChange={(nextValues) =>
+                  setAttributes({ borderMainBox: nextValues })
+                }
+              />
+            </PanelRow>
+            <PanelRow>
+              <ColorPicker
+                color={attributes.fontColorForMain}
+                onChangeComplete={(newval) =>
+                  setAttributes({ fontColorForMain: newval.hex })
+                }
+                disableAlpha
+              />
+            </PanelRow>
+            <PanelRow>
+              <BoxControl
+                values={attributes.paddingForMainBox}
+                onChange={(nextValues) =>
+                  setAttributes({ paddingForMainBox: nextValues })
+                }
+              />
+            </PanelRow>
+            <PanelRow>
+              <BoxControl
+                values={attributes.paddingForContentBox}
+                onChange={(nextValues) =>
+                  setAttributes({ paddingForContentBox: nextValues })
+                }
+              />
+            </PanelRow>
+            <PanelRow>
+              <FontSizePicker
+                value={attributes.fontSizeM}
+                onChange={(newFontSize) => {
+                  setAttributes({ fontSizeM: newFontSize });
+                }}
+              />
+            </PanelRow>
             <PanelRow>
               <SelectControl
                 label="Select your categories"
                 value={attributes.favoriteAnimal}
                 options={[
-                  { label: "Dogs", value: "dogs" },
-                  { label: "Cats", value: "cats" },
-                  { label: "Something else", value: "weird_one" },
+                  { label: "ASC", value: "asc" },
+                  { label: "DESC", value: "desc" },
                 ]}
                 onChange={(newval) => setAttributes({ favoriteAnimal: newval })}
               />
@@ -127,7 +233,6 @@ function EditComponent(props) {
                 onChangeComplete={(newval) =>
                   setAttributes({ favoriteColor: newval.hex })
                 }
-                disableAlpha
               />
             </PanelRow>
             <PanelRow>
@@ -143,10 +248,22 @@ function EditComponent(props) {
               <TextControl
                 label="  Enter number of how show"
                 type="number"
-                onChange={updateQuestionValue}
+                onChange={(value) => setAttributes({ numberOfPosts: value })}
                 value={attributes.numberOfPosts}
               />
-              {console.log(attributes.numberOfPosts)}
+              {/* {console.log(attributes.numberOfPosts)} */}
+            </PanelRow>
+            <PanelRow>
+              <SelectControl
+                label="Order By"
+                value={attributes.orderBy}
+                options={[
+                  { label: "Data", value: "data" },
+                  { label: "Title", value: "title" },
+                  { label: "Random", value: "random" },
+                ]}
+                onChange={(value) => setAttributes({ orderBy: value })}
+              />
             </PanelRow>
             <PanelRow>
               <SelectControl
@@ -155,7 +272,10 @@ function EditComponent(props) {
                 options={
                   getCategoriesByPost &&
                   getCategoriesByPost.map((postc) => {
-                    return { label: postc.name, value: postc.id };
+                    return {
+                      label: postc.name,
+                      value: postc.id,
+                    };
                   })
                 }
                 onChange={(newval) => setAttributes({ selectCategory: newval })}
@@ -164,12 +284,12 @@ function EditComponent(props) {
           </PanelBody>
         </InspectorControls>
       </div>
-      <div
-        className={"posts-grids-container layout " + props.className}
-        style={{
-          backgroundColor: attributes.favoriteColor,
-        }}
-      >
+      {attributes.toggle == true ? (
+        <input placeholder="Type something to search" type="text" />
+      ) : (
+        ""
+      )}
+      <div className={"posts-grids-container layout " + props.className}>
         {allPosts &&
           allPosts.map((post, i) => {
             const a = 0;
@@ -190,28 +310,42 @@ function EditComponent(props) {
             const day = String(date.getDate()).padStart(2, "0");
 
             return (
-              <div key={post.id} className="cell">
+              <div key={post.id} className="cell" style={mainStyle}>
+                {/* {console.log(post)} */}
                 {featuredImage && (
                   <img
                     src={featuredImage.media_details.sizes.thumbnail.source_url}
                   />
                 )}
+                <div className="post-content" style={contentStyle}>
+                  <div className="post-mata">
+                    {getCategoriesByPosts &&
+                      getCategoriesByPosts.map((postscat, i) => {
+                        return (
+                          <a className="post-category" href={postscat.link}>
+                            {postscat.name}{" "}
+                          </a>
+                        );
+                      })}
+                    {getUser && (
+                      <a className="post-user" href={getUser[a].link}>
+                        {getUser[a].username}
+                      </a>
+                    )}
+                  </div>
 
-                {getCategoriesByPosts &&
-                  getCategoriesByPosts.map((postscat) => {
-                    return <a href={postscat.link}>{postscat.name} </a>;
-                  })}
-                {getUser && <a href={getUser[a].link}>{getUser[a].username}</a>}
+                  <h4 className="post-title">{post.title.rendered}</h4>
 
-                <h4>{post.title.rendered}</h4>
-
-                <div>
-                  {day}-{monthNames[date.getMonth()]}-{date.getFullYear()}
+                  <div className="post-date">
+                    {day}-{monthNames[date.getMonth()]}-{date.getFullYear()}
+                  </div>
+                  <div className="post-expcerpt">
+                    {post.excerpt.rendered
+                      .replace(/(<([^>]+)>)/gi, "")
+                      .slice(0, 100)
+                      .concat("...")}
+                  </div>
                 </div>
-                {post.excerpt.rendered
-                  .replace(/(<([^>]+)>)/gi, "")
-                  .slice(0, 100)
-                  .concat("...")}
               </div>
             );
           })}

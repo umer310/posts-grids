@@ -1,4 +1,35 @@
 /*!******************************************************************************************************************************************************************************************************************************************!*\
   !*** css ./node_modules/css-loader/dist/cjs.js??ruleSet[1].rules[3].use[1]!./node_modules/postcss-loader/dist/cjs.js??ruleSet[1].rules[3].use[2]!./node_modules/sass-loader/dist/cjs.js??ruleSet[1].rules[3].use[3]!./src/frontend.scss ***!
   \******************************************************************************************************************************************************************************************************************************************/
+.paying-attention-frontend .layout {
+  display: -ms-grid;
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(275px, 1fr));
+}
+.paying-attention-frontend .layout .cell {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: nowrap;
+  background-color: #c3c3c3;
+  border-radius: 3px;
+  padding: 20px;
+}
+.paying-attention-frontend .layout .cell .post-mata a {
+  font-size: 12px;
+  text-decoration: none;
+  background-color: #f7f7f7;
+  padding: 3px 5px;
+  margin-right: 5px;
+}
+.paying-attention-frontend .layout .cell h2 {
+  font-size: 25px;
+}
+.paying-attention-frontend .layout .cell p {
+  font-size: 15px;
+}
+.paying-attention-frontend .searchBar {
+  margin-bottom: 20px;
+}
 
+/*# sourceMappingURL=frontend.css.map*/
