@@ -154,7 +154,24 @@ function Quiz({
     };
 
     fetchData();
+<<<<<<< HEAD
   }, [value]);
+=======
+  }, []);
+  onChangeHandler = (e) => {
+    this.search(e.target.value);
+    this.setState({ value: e.target.value });
+  };
+  if (loading) return <p>Loading...</p>;
+  return (
+    <div className="paying-attention-frontend">
+      <input
+        value={this.state.value}
+        onChange={(e) => this.onChangeHandler(e)}
+        placeholder="Type something to search"
+      />
+      <p>{console.log(data, props)} working</p>
+>>>>>>> 784a3a8362724f4e0519f4056a290a35b915dc91
 
   const onChangeInputHandlar = async (e) => {
     const val = e.target.value;
